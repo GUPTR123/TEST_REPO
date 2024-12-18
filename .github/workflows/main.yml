@@ -3,25 +3,37 @@ name: List Changed Files
 on:
   push:
     branches:
-      - main  # Adjust the branch name as per your use case.
+      - main # Adjust to your target branch if not 'main'
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  list-changes:
+  list-changed-files:
     runs-on: ubuntu-latest
+
     steps:
-      # Step 1: Checkout the repository
+      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Get list of changed files
+      # Get list of changed files
       - name: List Changed Files
+        id: changed-files
         run: |
-          echo "Files changed in the commit:"
-          git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tee changed_files.txt
-          echo "Done listing files."
-
-      # Step 3: Display the list of changed files
-      - name: Display Changed Files
-        run: |
+          # Fetch changes based on the event type
+          if [ "${{ github.event_name }}" = "push" ]; then
+            git diff --name-only ${{ github.event.before }} ${{ github.sha }}
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only origin/${{ github.base_ref }} HEAD
+          fi > changed_files.txt
+          
+          # Print the list of changed files
           echo "Changed files:"
+          cat changed_files.txt
+
+      # Display files in GitHub Actions terminal
+      - name: Print Changed Files
+        run: |
+          echo "Relative paths of changed files:"
           cat changed_files.txt
