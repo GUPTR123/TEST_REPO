@@ -10,15 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Step 1: Checkout the repository
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
-
-      # Step 2: Get list of changed files
-      - name: List Changed Files
-        id: capture
-        run: |
-          echo "Files changed in the commit:"
-          OUTPUT = $(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} )
-          echo OUTPUT
+        with:
+           fetch-depth: 0
+      - name: Get changes
+        run: git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
 
       
