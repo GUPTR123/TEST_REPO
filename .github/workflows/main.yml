@@ -3,39 +3,21 @@ name: List Changed Files
 on:
   push:
     branches:
-      - main # Trigger on commits to the main branch (change as needed)
+      - main  # Adjust the branch name as per your use case.
 
 jobs:
-  list-changed-files:
+  list-changes:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the repository
-      - name: Checkout Repository
+      # Step 1: Checkout the repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up a step to fetch the changed files
-      - name: Get List of Changed Files
-        id: changed-files
+      # Step 2: Get list of changed files
+      - name: List Changed Files
         run: |
-          # Fetch the last commit hash
-          PREV_HASH=$(git rev-parse HEAD~1)
-          
-          # Fetch the current commit hash
-          CURR_HASH=$(git rev-parse HEAD)
+          echo "Files changed in the commit:"
+          OUTPUT = $(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} )
+          echo "Done listing files : $OUTPUT"
 
-          # Get the list of changed files
-          git diff --name-only $PREV_HASH $CURR_HASH > changed_files.txt
-          
-          # Print the list of files
-          echo "Changed files:"
-          cat changed_files.txt
-          
-          # Save the output in a format GitHub Actions can use
-          echo "::set-output name=files::$(cat changed_files.txt | tr '\n' ' ')"
-
-      # Display the list of changed files in the GitHub Actions terminal
-      - name: Display Changed Files
-        run: |
-          echo "The following files were changed:"
-          echo "${{ steps.changed-files.outputs.files }}"
+      
