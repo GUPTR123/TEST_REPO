@@ -1,39 +1,38 @@
-name: List Changed Files
+name: CI
 
 on:
   push:
     branches:
-      - main # Adjust to your target branch if not 'main'
-  pull_request:
-    branches:
       - main
 
 jobs:
-  list-changed-files:
-    runs-on: ubuntu-latest
-
+  # -------------------------------------------------------------
+  # Using GitHub's API is not supported for push events
+  # -------------------------------------------------------------
+  # 
+  # ----------------------------------------------------------------------------------------------
+  # Using local .git history
+  # ----------------------------------------------------------------------------------------------
+  # Event `push`: Compare the preceding remote commit -> to the current commit of the main branch 
+  # ----------------------------------------------------------------------------------------------
+  changed_files:
+    runs-on: ubuntu-latest  # windows-latest || macos-latest
+    name: Test changed-files
     steps:
-      # Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # OR "2" -> To retrieve the preceding commit.
 
-      # Get list of changed files
-      - name: List Changed Files
+      - name: Get changed files
         id: changed-files
-        run: |
-          # Fetch changes based on the event type
-          if [ "${{ github.event_name }}" = "push" ]; then
-            git diff --name-only ${{ github.event.before }} ${{ github.sha }}
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only origin/${{ github.base_ref }} HEAD
-          fi > changed_files.txt
-          
-          # Print the list of changed files
-          echo "Changed files:"
-          cat changed_files.txt
+        uses: tj-actions/changed-files@v45
+      # NOTE: `since_last_remote_commit: true` is implied by default and falls back to the previous local commit.
 
-      # Display files in GitHub Actions terminal
-      - name: Print Changed Files
+      - name: List all changed files
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
-          echo "Relative paths of changed files:"
-          cat changed_files.txt
+          for file in ${ALL_CHANGED_FILES}; do
+            echo "$file was changed"
+          done
+      ...
