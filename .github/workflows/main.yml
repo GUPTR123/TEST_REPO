@@ -3,19 +3,25 @@ name: List Changed Files
 on:
   push:
     branches:
-      - main
+      - main  # Adjust the branch name as per your use case.
 
 jobs:
-  list-changed-files:
+  list-changes:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the repository
+      # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Get the list of changed files
-      - name: List changed files
+      # Step 2: Get list of changed files
+      - name: List Changed Files
         run: |
-          echo "Changed files and their relative paths:"
-          echo git diff-tree --no-commit-id --name-only -r ${{ github.sha }}
+          echo "Files changed in the commit:"
+          git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tee changed_files.txt
+          echo "Done listing files."
+
+      # Step 3: Display the list of changed files
+      - name: Display Changed Files
+        run: |
+          echo "Changed files:"
+          cat changed_files.txt
