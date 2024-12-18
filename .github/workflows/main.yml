@@ -18,4 +18,4 @@ jobs:
       - name: List changed files
         run: |
           echo "Changed files and their relative paths:"
-          git diff-tree --no-commit-id --name-only -r ${{ github.sha }}
+          git diff --name-only ${{github.events.before}} ${{ github.sha }}
