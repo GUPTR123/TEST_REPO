@@ -1,31 +1,21 @@
-name: Generate Changed Files JSON
+name: List Changed Files
 
 on:
   push:
     branches:
-      - main  # Change this to your target branch if needed
+      - main
 
 jobs:
   list-changed-files:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      # Checkout the repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Get Changed Files as JSON
-        id: changed-files
+      # Get the list of changed files
+      - name: List changed files
         run: |
-          # Get the list of changed files in the commit
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
-
-          # Convert the file list to a JSON array
-          JSON_OUTPUT=$(echo "$CHANGED_FILES" | jq -R -s 'split("\n") | map(select(length > 0))')
-
-          # Print the JSON for visibility
-          echo "Changed files in JSON format:"
-          echo "$JSON_OUTPUT"
-
-          # Export the JSON output
-          echo "::set-output name=files_json::$JSON_OUTPUT"
-
-      
+          echo "Changed files and their relative paths:"
+          git diff-tree --no-commit-id --name-only -r ${{ github.sha }}
