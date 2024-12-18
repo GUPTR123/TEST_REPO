@@ -17,8 +17,8 @@ jobs:
       - name: List Changed Files
         run: |
           echo "Files changed in the commit:"
-          git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tee changed_files.txt
-          echo "Done listing files."
+          a = git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tee changed_files.txt
+          echo a
 
       # Step 3: Display the list of changed files
       - name: Display Changed Files
