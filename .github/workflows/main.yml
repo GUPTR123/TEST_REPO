@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "*"
-      - "!main" # Adjust to exclude branches if needed
 
 jobs:
   file-change-tracker:
