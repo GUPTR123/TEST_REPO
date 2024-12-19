@@ -46,15 +46,15 @@ jobs:
           IFS=','
   
           for FILE in $ADDED; do
-            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Added\"}" >> file_changes.log
+            echo "{\"Repository\": \"${{github.repository}}\",\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Added\"}" >> file_changes.log
           done
 
           for FILE in $MODIFIED; do
-            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Updated\"}" >> file_changes.log
+            echo "{\"Repository\": \"${{github.repository}}\",\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Updated\"}" >> file_changes.log
           done
 
           for FILE in $DELETED; do
-            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Deleted\"}" >> file_changes.log
+            echo "{\"Repository\": \"${{github.repository}}\",\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Deleted\"}" >> file_changes.log
           done
 
       - name: Print File Changes
