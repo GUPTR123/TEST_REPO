@@ -28,7 +28,7 @@ jobs:
           # Get details for added, modified, and deleted files
           ADDED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=A $COMMIT_HASH )
           echo "ADDED: $ADDED"
-          MODIFIED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH )
+          MODIFIED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH )
           echo "MODIFIED: $MODIFIED"
           DELETED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^D' | awk '{print $2}')
           echo "DELETED: $DELETED"
