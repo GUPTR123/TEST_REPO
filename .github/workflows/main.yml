@@ -34,7 +34,7 @@ jobs:
           echo "MODIFIED: $MODIFIED"
           DELETED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^D' | awk '{print $2}')
           echo "DELETED: $DELETED"
-          TEST = $(git diff --name-status ${{ github.event.before }} ${{ github.event.after }}  )
+          TEST = $(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | xargs)
           echo "TEST: $TEST"
 
           # Print the details in a combined format
