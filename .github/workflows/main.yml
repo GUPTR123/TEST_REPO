@@ -36,6 +36,8 @@ jobs:
           echo
           echo "MODIFIED: "
           echo $MODIFIED
+          MP = $(echo $MODIFIED | tr '\n' '$$')
+          echo $MP
           DELETED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=D $COMMIT_HASH )
           echo
           echo "DELETED: "
