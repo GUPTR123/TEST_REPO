@@ -27,6 +27,10 @@ jobs:
 
           # Get details for added, modified, and deleted files
           ADDED=$( git diff-tree -r --name-only --no-commit-id --diff-filter=M HEAD )
+          echo $( git diff-tree  $COMMIT_HASH)
+          echo $( git diff $COMMIT_HASH )
+          echo $( git diff-tree -r --name-only  $COMMIT_HASH)
+          echo $( git diff-tree -r --name-only --no-commit-id $COMMIT_HASH )
           echo "ADDED: $ADDED"
           MODIFIED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH )
           echo "MODIFIED: $MODIFIED"
