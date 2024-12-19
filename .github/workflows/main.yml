@@ -26,9 +26,9 @@ jobs:
           echo "DATE: $DATE"
 
           # Get details for added, modified, and deleted files
-          ADDED=$( git diff --name-status )
+          ADDED=$( git diff --name-status START_COMMIT..END_COMMIT )
           echo "ADDED: $ADDED"
-          MODIFIED=$(git diff --diff-filter=M  )
+          MODIFIED=$(git diff --diff-filter=M HEAD )
           echo "MODIFIED: $MODIFIED"
           DELETED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^D' | awk '{print $2}')
           echo "DELETED: $DELETED"
