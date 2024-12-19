@@ -1,50 +1,61 @@
-name: Track File Changes
+name: File Change Logger
 
 on:
   push:
     branches:
-      - "*"
+      - main  # Adjust the branch as needed
 
 jobs:
-  file-change-tracker:
+  log-file-changes:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v3
+        with:
+           fetch-depth: 0
 
-      - name: Get Commit Details
-        id: commit_details
+      - name: Fetch commit details
+        id: commit_info
         run: |
-          echo "COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')" >> $GITHUB_ENV
-          echo "COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s')" >> $GITHUB_ENV
+          COMMIT_HASH=$(git rev-parse HEAD)
+          echo "COMMIT_HASH: $COMMIT_HASH"
+          AUTHOR_NAME=$(git log -1 --pretty=format:'%an' $COMMIT_HASH)
+          echo "AUTHOR_NAME: $AUTHOR_NAME"
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s' $COMMIT_HASH)
+          echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
+          DATE=$(git log -1 --pretty=format:'%ad' --date=iso $COMMIT_HASH)
+          echo "DATE: $DATE"
+          
+          # Get details for added, modified, and deleted files
+          ADDED=$(git diff --name-status HEAD~1 HEAD)
+          echo
+          echo "ADDED: "
+          echo $ADDED
+          MODIFIED=$(git diff --name-status HEAD~1 HEAD )
+          echo
+          echo "MODIFIED: "
+          echo $MODIFIED
+          DELETED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=D $COMMIT_HASH )
+          echo
+          echo "DELETED: "
+          echo $DELETED
 
-      - name: Analyze File Changes
-        run: |
-          git diff --name-status HEAD~1 HEAD > file_changes.txt
+          # Print the details in a combined format
+          echo "Combined File Changes:" > file_changes.log
 
-      - name: Process File Changes
-        run: |
-          echo "[" > changes.json
-          while read status file; do
-            if [ "$status" == "A" ]; then
-              ACTION="File Added"
-            elif [ "$status" == "M" ]; then
-              ACTION="File Updated"
-            elif [ "$status" == "D" ]; then
-              ACTION="File Deleted"
-            fi
+          for FILE in $ADDED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Added\"}" >> file_changes.log
+          done
 
-            echo "  {" >> changes.json
-            echo "    \"filepath\": \"$file\"," >> changes.json
-            echo "    \"created_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"," >> changes.json
-            echo "    \"created_by\": \"$COMMIT_AUTHOR\"," >> changes.json
-            echo "    \"commit_message\": \"$COMMIT_MESSAGE\"," >> changes.json
-            echo "    \"action\": \"$ACTION\"" >> changes.json
-            echo "  }," >> changes.json
-          done < file_changes.txt
-          sed -i '$ s/,$//' changes.json # Remove trailing comma from last JSON object
-          echo "]" >> changes.json
+          for FILE in $MODIFIED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Updated\"}" >> file_changes.log
+          done
+
+          for FILE in $DELETED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Deleted\"}" >> file_changes.log
+          done
 
       - name: Print File Changes
-        run: cat changes.json
+        run: |
+          cat file_changes.log
