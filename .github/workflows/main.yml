@@ -17,14 +17,21 @@ jobs:
         id: commit_info
         run: |
           COMMIT_HASH=$(git rev-parse HEAD)
+          echo "COMMIT_HASH: $COMMIT_HASH"
           AUTHOR_NAME=$(git log -1 --pretty=format:'%an' $COMMIT_HASH)
+          echo "AUTHOR_NAME: $AUTHOR_NAME"
           COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s' $COMMIT_HASH)
+          echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
           DATE=$(git log -1 --pretty=format:'%ad' --date=iso $COMMIT_HASH)
+          echo "DATE: $DATE"
 
           # Get details for added, modified, and deleted files
           ADDED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^A' | awk '{print $2}')
+          echo "ADDED: $ADDED"
           MODIFIED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^M' | awk '{print $2}')
+          echo "MODIFIED: $MODIFIED"
           DELETED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^D' | awk '{print $2}')
+          echo "DELETED: $DELETED"
 
           # Print the details in a combined format
           echo "Combined File Changes:" > file_changes.log
