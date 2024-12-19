@@ -28,16 +28,14 @@ jobs:
           echo "DATE: $DATE"
           
           # Get details for added, modified, and deleted files
-          ADDED=$(git diff --name-status HEAD~1 HEAD)
+          ADDED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=A $COMMIT_HASH | while IFS=read )
           echo
           echo "ADDED: "
           echo $ADDED
-          MODIFIED=$(git diff --name-status HEAD~1 HEAD )
+          MODIFIED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH | while IFS=read )
           echo
           echo "MODIFIED: "
           echo $MODIFIED
-          MP = $(echo $MODIFIED | tr '\n' '$$')
-          echo $MP
           DELETED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=D $COMMIT_HASH )
           echo
           echo "DELETED: "
