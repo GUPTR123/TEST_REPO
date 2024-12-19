@@ -1,53 +1,30 @@
-name: File Change Logger
+name: List Changed Files
 
 on:
   push:
     branches:
-      - main  # Adjust the branch as needed
+      - main  # Adjust the branch name as per your use case.
 
 jobs:
-  log-file-changes:
+  list-changes:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Fetch commit details
-        id: commit_info
+      - uses: actions/checkout@v3
+        with:
+            fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
+      - name: Get changed files
+        id: changed-files
         run: |
-          COMMIT_HASH=$(git rev-parse HEAD)
-          echo "COMMIT_HASH: $COMMIT_HASH"
-          AUTHOR_NAME=$(git log -1 --pretty=format:'%an' $COMMIT_HASH)
-          echo "AUTHOR_NAME: $AUTHOR_NAME"
-          COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s' $COMMIT_HASH)
-          echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
-          DATE=$(git log -1 --pretty=format:'%ad' --date=iso $COMMIT_HASH)
-          echo "DATE: $DATE"
-
-          # Get details for added, modified, and deleted files
-          ADDED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^A' | awk '{print $2}')
-          echo "ADDED: $ADDED"
-          MODIFIED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^M' | awk '{print $2}')
-          echo "MODIFIED: $MODIFIED"
-          DELETED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^D' | awk '{print $2}')
-          echo "DELETED: $DELETED"
-
-          # Print the details in a combined format
-          echo "Combined File Changes:" > file_changes.log
-
-          for FILE in $ADDED; do
-            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Added\"}" >> file_changes.log
-          done
-
-          for FILE in $MODIFIED; do
-            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Updated\"}" >> file_changes.log
-          done
-
-          for FILE in $DELETED; do
-            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Deleted\"}" >> file_changes.log
-          done
-
-      - name: Print File Changes
+            if ${{ github.event_name == 'pull_request' }}; then
+                echo "changed_files=$(git diff --name-only -r HEAD^1 HEAD | xargs)" >> $GITHUB_OUTPUT
+            else
+                echo "changed_files=$(git diff ${{ github.event.before }} ${{ github.event.after }} | xargs)" >> $GITHUB_OUTPUT
+            fi
+      - name: List changed files
         run: |
-          cat file_changes.log
+            echo ${{ steps.changed-files.outputs.changed_files }}
+            for file in ${{ steps.changed-files.outputs.changed_files }}; do
+                echo "$file was changed"
+            done
+
+      
