@@ -1,53 +1,55 @@
-name: File Changes Information
+name: File Change Logger
 
 on:
   push:
-    branches: [main] # Or your main branch name
+    branches:
+      - main  # Adjust the branch as needed
 
 jobs:
-  print_file_info:
+  log-file-changes:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2 # Important for getting previous commit
+           fetch-depth: 0
 
-      - name: Get changed files
-        id: changed-files
+      - name: Fetch commit details
+        id: commit_info
         run: |
-          # Get the list of changed files between the last two commits
-          CHANGED_FILES=$(git diff --name-status HEAD^ HEAD)
-          echo "::set-output name=files::$CHANGED_FILES"
+          COMMIT_HASH=$(git rev-parse HEAD)
+          echo "COMMIT_HASH: $COMMIT_HASH"
+          AUTHOR_NAME=$(git log -1 --pretty=format:'%an' $COMMIT_HASH)
+          echo "AUTHOR_NAME: $AUTHOR_NAME"
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s' $COMMIT_HASH)
+          echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
+          DATE=$(git log -1 --pretty=format:'%ad' --date=iso $COMMIT_HASH)
+          echo "DATE: $DATE"
 
-      - name: Print file information
-        run: |
-          IFS=$'\n' # Important for handling filepaths with spaces
-          for line in ${{ steps.changed-files.outputs.files }}; do
-            status="${line:0:1}" # Get the status (A, M, D)
-            filepath="${line:2}"  # Get the filepath
+          # Get details for added, modified, and deleted files
+          ADDED=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }})
+          echo "ADDED: $ADDED"
+          MODIFIED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^M' | awk '{print $2}')
+          echo "MODIFIED: $MODIFIED"
+          DELETED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^D' | awk '{print $2}')
+          echo "DELETED: $DELETED"
 
-            if [[ -z "$filepath" ]]; then
-              continue # Skip empty lines
-            fi
-            
-            commit_message=$(git log -1 --pretty=%B "$filepath")
-            created_at=$(git log --format=%aI -n 1 -- "$filepath")
-            created_by=$(git log --format="%ae" -n 1 -- "$filepath")
-            
+          # Print the details in a combined format
+          echo "Combined File Changes:" > file_changes.log
 
-            echo "{"
-            echo "  \"filepath\": \"$filepath\","
-            echo "  \"created_at\": \"$created_at\","
-            echo "  \"created_by\": \"$created_by\","
-            echo "  \"commit_message\": \"$commit_message\","
-            
-            if [[ "$status" == "A" ]]; then
-              echo "  \"change_type\": \"File Added\""
-            elif [[ "$status" == "M" ]]; then
-              echo "  \"change_type\": \"File Updated\""
-            elif [[ "$status" == "D" ]]; then
-              echo "  \"change_type\": \"File Deleted\""
-            fi
-            echo "},"
+          for FILE in $ADDED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Added\"}" >> file_changes.log
           done
+
+          for FILE in $MODIFIED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Updated\"}" >> file_changes.log
+          done
+
+          for FILE in $DELETED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Deleted\"}" >> file_changes.log
+          done
+
+      - name: Print File Changes
+        run: |
+          cat file_changes.log
