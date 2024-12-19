@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+            fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
 
       - name: Fetch commit details
         id: commit_info
@@ -32,6 +34,8 @@ jobs:
           echo "MODIFIED: $MODIFIED"
           DELETED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^D' | awk '{print $2}')
           echo "DELETED: $DELETED"
+          TEST = $(git diff --name-status ${{ github.event.before }} ${{ github.event.after }}  )
+          echo "TEST: $TEST"
 
           # Print the details in a combined format
           echo "Combined File Changes:" > file_changes.log
