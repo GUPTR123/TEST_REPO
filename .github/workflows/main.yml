@@ -23,8 +23,11 @@ jobs:
       - name: List changed files
         run: |
             echo ${{ steps.changed-files.outputs.changed_files }}
-            for file in ${{ steps.changed-files.outputs.changed_files }}; do
-                echo "$file was changed"
+            IFS=","
+            echo ".$IFS."
+            for file in ${{ steps.changed-files.outputs.changed_files }}
+            do echo $file was changed
             done
+            unset IFS
 
       
