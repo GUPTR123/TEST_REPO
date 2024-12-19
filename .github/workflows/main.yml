@@ -1,42 +1,61 @@
-name: File Addition Tracker
+name: File Change Logger
 
 on:
   push:
-    paths:
-      - '**'  # Trigger on changes to any files
+    branches:
+      - main  # Adjust the branch as needed
 
 jobs:
-  file-tracking:
+  log-file-changes:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v3
+        with:
+           fetch-depth: 0
 
-      - name: Get commit details
+      - name: Fetch commit details
         id: commit_info
         run: |
-          echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
-          echo "commit_author=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
-          echo "commit_email=$(git log -1 --pretty=%ae)" >> $GITHUB_ENV
-          echo "commit_date=$(git log -1 --pretty=%ad)" >> $GITHUB_ENV
+          COMMIT_HASH=$(git rev-parse HEAD)
+          echo "COMMIT_HASH: $COMMIT_HASH"
+          AUTHOR_NAME=$(git log -1 --pretty=format:'%an' $COMMIT_HASH)
+          echo "AUTHOR_NAME: $AUTHOR_NAME"
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s' $COMMIT_HASH)
+          echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
+          DATE=$(git log -1 --pretty=format:'%ad' --date=iso $COMMIT_HASH)
+          echo "DATE: $DATE"
+          
+          # Get details for added, modified, and deleted files
+          ADDED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=A $COMMIT_HASH)
+          echo
+          echo "ADDED: "
+          echo $ADDED
+          MODIFIED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH)
+          echo
+          echo "MODIFIED: "
+          echo $MODIFIED
+          DELETED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=D $COMMIT_HASH )
+          echo
+          echo "DELETED: "
+          echo $DELETED
 
-      - name: Find newly added files
-        id: find_new_files
-        run: |
-          git diff --name-status HEAD~1 HEAD | grep '^A' | awk '{print $2}' > new_files.txt
+          # Print the details in a combined format
+          echo "Combined File Changes:" > file_changes.log
 
-      - name: Format file details
-        id: format_file_details
-        run: |
-          repo_name=$(basename -s .git `git config --get remote.origin.url`)
-          while IFS= read -r filepath; do
-            created_at=$(git log --diff-filter=A --format="%ad" -- $filepath | head -n 1)
-            created_by=$(git log --diff-filter=A --format="%an" -- $filepath | head -n 1)
-            echo "- File Path: $filepath\n  Created At: $created_at\n  Created By: $created_by\n  Commit Message: $commit_message\n  Status: File Added\n  Repository Name: $repo_name" >> file_details.txt
-          done < new_files.txt
+          for FILE in $ADDED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Added\"}" >> file_changes.log
+          done
 
-      - name: Print file details
+          for FILE in $MODIFIED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Updated\"}" >> file_changes.log
+          done
+
+          for FILE in $DELETED; do
+            echo "{\"filepath\": \"$FILE\", \"created_at\": \"$DATE\", \"created_by\": \"$AUTHOR_NAME\", \"commit_message\": \"$COMMIT_MESSAGE\", \"status\": \"File Deleted\"}" >> file_changes.log
+          done
+
+      - name: Print File Changes
         run: |
-          echo "File Details:\n"
-          cat file_details.txt
+          cat file_changes.log
