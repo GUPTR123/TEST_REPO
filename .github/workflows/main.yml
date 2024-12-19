@@ -32,7 +32,7 @@ jobs:
           echo
           echo "ADDED: "
           echo $ADDED
-          MODIFIED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH | while IFS=read )
+          MODIFIED=$(git diff-tree --name-only --no-commit-id --diff-filter=M $COMMIT_HASH | while IFS= read -r n; do dirname "$n"; done  )
           echo
           echo "MODIFIED: "
           echo $MODIFIED
