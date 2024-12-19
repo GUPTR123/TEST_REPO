@@ -32,7 +32,7 @@ jobs:
           echo "ADDED: $ADDED"
           MODIFIED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH)
           echo "MODIFIED: $MODIFIED"
-          DELETED=$(git diff-tree --no-commit-id --name-status -r $COMMIT_HASH | grep '^D' | awk '{print $2}')
+          DELETED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=D $COMMIT_HASH)
           echo "DELETED: $DELETED"
 
           # Print the details in a combined format
