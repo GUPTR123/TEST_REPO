@@ -28,11 +28,11 @@ jobs:
           echo "DATE: $DATE"
 
           # Get details for added, modified, and deleted files
-          ADDED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=A $COMMIT_HASH | grep -v '/$')
+          ADDED=$(git diff -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH )
           echo "ADDED: $ADDED"
-          MODIFIED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH | grep -v '/$'))
+          MODIFIED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=M $COMMIT_HASH )
           echo "MODIFIED: $MODIFIED"
-          DELETED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=D $COMMIT_HASH | grep -v '/$'))
+          DELETED=$(git diff-tree -r --name-only --no-commit-id --diff-filter=D $COMMIT_HASH )
           echo "DELETED: $DELETED"
 
           # Print the details in a combined format
